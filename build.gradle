@@ -1,0 +1,67 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'scala'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.google.osdetector'
+
+def currentOs = osdetector.os
+//def currentOs = 'linux'
+//def currentOs = 'windows'
+
+def os = [
+    'windows': 'win32',
+    'osx'    : 'macosx'
+]
+
+group 'com.github.pitzcarraldo'
+version "0.1.${currentOs}-SNAPSHOT"
+sourceCompatibility = 1.8
+targetCompatibility = 1.7
+
+jar {
+  baseName = 'spring-node-view'
+  version = "0.1.${currentOs}-SNAPSHOT"
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile('org.scala-lang:scala-library:2.12.1')
+  compile('javax.servlet:javax.servlet-api:3.+')
+  compile('org.springframework:spring-webmvc:3.+')
+  // compile('org.springframework:spring-webmvc:[3.0,)')
+  compile('com.fasterxml.jackson.core:jackson-databind:2.+')
+  compile('com.google.guava:guava:21.0')
+  compile("com.eclipsesource.j2v8:j2v8_${os[currentOs] ?: currentOs}_x86_64:4.6.0")
+  testCompile('junit:junit:4.12')
+  testCompile('org.easytesting:fest-assert-core:2.0M10')
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
+  }
+}
+publishing {
+  repositories {
+    maven {
+      // change to point to your repo, e.g. http://my.org/repo
+      url "$project.rootDir/../maven/snapshots"
+    }
+  }
+}
