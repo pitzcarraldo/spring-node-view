@@ -1,5 +1,5 @@
 module.exports = function render(model, callback) {
-  return setTimeout(function () {
+  setTimeout(function () {
     callback && callback({
       headers: {
         'Content-Type': 'application/json'

@@ -29,6 +29,7 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.springframework.web.servlet.view.AbstractTemplateView
 
 import scala.beans.BeanProperty
+import scala.collection.JavaConverters._
 
 /**
   * @author Minkyu Cho (pitzcarraldo@gmail.com)
@@ -47,12 +48,12 @@ class NodeView extends AbstractTemplateView {
     model.remove("springMacroRequestContext")
     val writer = httpResponse.getWriter
     try {
-      val viewFilePath = getServletContext.getResource(viewPath).getPath
+      val viewFilePath = httpRequest.getServletContext.getResource(viewPath).getPath
       val template: NodeViewTemplate = new NodeViewTemplate(viewFilePath, model)
       val response: util.Map[String, AnyRef] = renderer.render(template)
       if (response.containsKey("headers")) {
-        val headers = response.get("headers").asInstanceOf[util.Map[String, String]]
-        headers.forEach((key, value) => httpResponse.setHeader(key, value))
+        val headers = response.get("headers").asInstanceOf[util.Map[String, String]].asScala
+        headers.foreach(header => httpResponse.setHeader(header._1, header._2))
       }
       writer.append(response.get("body").asInstanceOf[String])
     } catch {

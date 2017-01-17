@@ -39,19 +39,27 @@ class V8ObjectUtils(runtime: V8) {
     def parse(string: String): V8Object = {
       val json = runtime.getObject("JSON")
       val parameters = new V8Array(runtime).push(string)
-      val result = json.executeObjectFunction("parse", parameters)
-      parameters.release()
-      json.release()
-      result
+      try {
+        json.executeObjectFunction("parse", parameters)
+      } catch {
+        case _: Exception => new V8Object(runtime)
+      } finally {
+        parameters.release()
+        json.release()
+      }
     }
 
     def stringify(`object`: V8Value): String = {
       val json = runtime.getObject("JSON")
       val parameters = new V8Array(runtime).push(`object`)
-      val result = json.executeStringFunction("stringify", parameters)
-      parameters.release()
-      json.release()
-      result
+      try {
+        json.executeStringFunction("stringify", parameters)
+      } catch {
+        case _: Exception => `object`.toString
+      } finally {
+        parameters.release()
+        json.release()
+      }
     }
   }
 
@@ -75,11 +83,10 @@ class V8ObjectUtils(runtime: V8) {
         }
         if (value.contains("body")) {
           value.get("body") match {
-            case body: String => builder.put("body", body)
             case body: V8Value =>
               builder.put("body", JSON.stringify(body))
               body.release()
-            case _ =>
+            case body => builder.put("body", body.toString)
           }
         }
         if (!value.contains("header") && !value.contains("body")) {

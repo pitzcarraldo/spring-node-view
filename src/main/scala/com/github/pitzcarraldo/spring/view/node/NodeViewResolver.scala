@@ -37,24 +37,19 @@ class NodeViewResolver extends AbstractTemplateViewResolver with ViewResolver wi
   var cacheExpireTime: Int = 5
   var renderer: NodeViewRenderer = _
 
-  override protected def buildView(viewName: String): AbstractUrlBasedView = {
+  override def buildView(viewName: String): AbstractUrlBasedView = {
     val view: NodeView = super.buildView(viewName).asInstanceOf[NodeView]
-    try {
-      view.setViewPath(getPrefix + viewName + getSuffix)
-      view.setContentType(getContentType)
-      view.setRenderer(renderer)
-      view
-    } catch {
-      case e: Exception => throw e
-    }
+    view.setViewPath(getPrefix + viewName + getSuffix)
+    view.setContentType(getContentType)
+    view.setRenderer(renderer)
+    view
   }
 
   override def afterPropertiesSet(): Unit = {
-    if (isCache) {
+    if (isCache)
       renderer = new CacheableNodeViewRenderer(getCacheLimit, cacheExpireTime)
-      return
-    }
-    renderer = new NodeViewRenderer
+    else
+      renderer = new NodeViewRenderer
   }
 
   override protected def requiredViewClass: Class[_] = classOf[NodeView]

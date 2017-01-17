@@ -41,11 +41,13 @@ class NodeViewRenderer {
     val objectUtils = new V8ObjectUtils(runtime)
     val v8Model = objectUtils.fromMap(template.model)
     var asyncResponse: util.Map[String, AnyRef] = null
-    val callback = new V8Function(render.getRuntime, (receiver: V8Object, parameters: V8Array) => {
-      asyncResponse = objectUtils.toResponse(parameters.get(0))
-      receiver.release()
-      parameters.release()
-      null
+    val callback = new V8Function(render.getRuntime, new JavaCallback() {
+      def invoke(receiver: V8Object, parameters: V8Array): AnyRef = {
+        asyncResponse = objectUtils.toResponse(parameters.get(0))
+        receiver.release()
+        parameters.release()
+        null
+      }
     })
     val args = new V8Array(runtime)
     args.push(v8Model)

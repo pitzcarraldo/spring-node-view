@@ -1,10 +1,15 @@
 buildscript {
-  repositories {
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
-  }
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.4.0'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.7.1'
+        classpath 'gradle.plugin.org.scoverage:gradle-scoverage:2.1.0'
+    }
 }
 
 apply plugin: 'java'
@@ -13,55 +18,123 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 apply plugin: 'com.google.osdetector'
+apply plugin: 'org.scoverage'
+apply plugin: 'com.github.kt3k.coveralls'
 
 def currentOs = osdetector.os
 //def currentOs = 'linux'
 //def currentOs = 'windows'
 
 def os = [
-    'windows': 'win32',
-    'osx'    : 'macosx'
+        'windows': 'win32',
+        'osx'    : 'macosx'
 ]
 
 group 'com.github.pitzcarraldo'
-version "0.1.${currentOs}-SNAPSHOT"
+version "0.1.0.${currentOs}-SNAPSHOT"
+archivesBaseName = 'spring-node-view'
 sourceCompatibility = 1.8
 targetCompatibility = 1.7
 
 jar {
-  baseName = 'spring-node-view'
-  version = "0.1.${currentOs}-SNAPSHOT"
+    baseName = archivesBaseName
 }
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-  compile('org.scala-lang:scala-library:2.12.1')
-  compile('javax.servlet:javax.servlet-api:3.+')
-  compile('org.springframework:spring-webmvc:3.+')
-  // compile('org.springframework:spring-webmvc:[3.0,)')
-  compile('com.fasterxml.jackson.core:jackson-databind:2.+')
-  compile('com.google.guava:guava:21.0')
-  compile("com.eclipsesource.j2v8:j2v8_${os[currentOs] ?: currentOs}_x86_64:4.6.0")
-  testCompile('junit:junit:4.12')
-  testCompile('org.easytesting:fest-assert-core:2.0M10')
+    compile('org.scala-lang:scala-library:2.11.8')
+    compile('javax.servlet:javax.servlet-api:3.+')
+    compile('org.springframework:spring-webmvc:[3.0,)')
+    compile('com.fasterxml.jackson.core:jackson-databind:2.+')
+    compile('com.google.guava:guava:21.0')
+    compile('com.google.code.findbugs:jsr305:3.0.1')
+    compile("com.eclipsesource.j2v8:j2v8_${os[currentOs] ?: currentOs}_x86_64:4.6.0")
+    testCompile('junit:junit:4.12')
+    testCompile('org.easytesting:fest-assert-core:2.0M10')
+    testCompile('org.mockito:mockito-all:1.10.19')
+    scoverage('org.scoverage:scalac-scoverage-plugin_2.11:1.1.0')
+    scoverage('org.scoverage:scalac-scoverage-runtime_2.11:1.1.0')
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
     }
-  }
 }
+
 publishing {
-  repositories {
-    maven {
-      // change to point to your repo, e.g. http://my.org/repo
-      url "$project.rootDir/../maven/snapshots"
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url "$project.rootDir/../maven/snapshots"
+        }
     }
-  }
 }
+
+coveralls.coberturaReportPath = "${buildDir}/reports/scoverage/cobertura.xml"
+
+//For Publishing to Sonatype
+//signing {
+//    sign configurations.archives
+//}
+//
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+//
+//            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+//                authentication(userName: ossrhUsername, password: ossrhPassword)
+//            }
+//
+//            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+//                authentication(userName: ossrhUsername, password: ossrhPassword)
+//            }
+//
+//            pom.project {
+//                name 'Spring Node View'
+//                packaging 'jar'
+//                // optionally artifactId can be defined here
+//                description 'Node.js view resolver for Spring MVC based on J2V8'
+//                url 'https://github.com/Pitzcarraldo/spring-node-view'
+//
+//                scm {
+//                    connection 'scm:git:git@github.com:Pitzcarraldo/spring-node-view.git'
+//                    developerConnection 'scm:git:git@github.com:Pitzcarraldo/spring-node-view.git'
+//                    url 'git@github.com:Pitzcarraldo/spring-node-view.git'
+//                }
+//
+//                licenses {
+//                    license {
+//                        name 'MIT'
+//                        url 'https://github.com/Pitzcarraldo/spring-node-view/blob/master/LICENSE'
+//                    }
+//                }
+//
+//                developers {
+//                    developer {
+//                        id 'Pitzcarraldo'
+//                        name 'Minkyu Cho'
+//                        email 'pitzcarraldo@gmail.com'
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
